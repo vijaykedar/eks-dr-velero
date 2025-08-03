@@ -1,0 +1,44 @@
+Setup Daily backup for EKS Disaster Recovery - Velero
+- Keep plan ready for EKS DR cluster in another region.
+- Take daily backup of EKS cluster using velero.
+- Setup the backup storage i.e S3 bucket and enable Cross-Region-Replication for disaster recovery.
+
+Velero Setup - 
+
+1. Install Velero on Client/Local Machine
+   $ wget https://github.com/vmware-tanzu/velero/releases/download/v1.16.0/velero-v1.16.0-linux-amd64.tar.gz
+   $ tar zxvf velero-v1.16.0-linux-amd64.tar.gz
+   $ sudo mv velero-v1.16.0-linux-amd64/velero /usr/local/bin/velero
+
+2. Install Velero on EKS Cluster
+   $  velero install \
+      --provider aws \
+      --plugins velero/velero-plugin-for-aws:v1.10.0 \
+      --bucket wezvatech-eks-backup \
+      --secret-file /home/ubuntu/.aws/credentials \
+      --backup-location-config region=ap-south-1 \
+      --snapshot-location-config region=ap-south-1
+   
+   Verify velero agent is running 
+    $ kubectl get pods -n velero
+
+   
+3. Setup jenkins job for daily backup  
+
+- Create Service Account for jenkins in EKS Cluster
+   $ kubectl apply -f sa.yml
+
+- Create Role and Role-binding for service account
+   $ kubectl apply -f role.yml role-bind.yml
+
+- Create Service Account Token 
+   $ kubectl apply -f sa-token.yml
+
+- Copy token and setup in jenkins credentials
+   
+4. Develop Jenkinsfile and include backup script and trigger daily
+
+
+  
+
+

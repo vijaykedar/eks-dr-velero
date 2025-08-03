@@ -39,67 +39,6 @@ Velero Setup -
 4. Develop Jenkinsfile and include backup script and trigger daily
 
 
-Velero Commands- 
-
-# Create a backup of all namespaces
-velero backup create <backup-name> --ttl 72h0m0s
-
-# Backup a specific namespace
-velero backup create <backup-name> --include-namespaces <namespace>
-
-# Backup specific resources
-velero backup create <backup-name> --include-resources deployments,services
-
-# Backup with a label selector
-velero backup create <backup-name> --selector app=myapp
-
-# Describe a backup
-velero backup describe <backup-name> --details
-
-# Get all backups
-velero backup get
-
-# Delete a backup
-velero backup delete <backup-name>  
-
-
-#############Restores###########################
-
-# Restore from a backup
-velero restore create --from-backup <backup-name>
-
-# Restore to a different namespace
-velero restore create --from-backup <backup-name> \
-  --namespace-mappings old-namespace:new-namespace
-
-# Get all restores
-velero restore get
-
-# Describe a restore
-velero restore describe <restore-name> --details
-
-# Delete a restore
-velero restore delete <restore-name>
-
-##################################################
-
-############# Snapshots & Logs #################
-
-# Get backup logs
-velero backup logs <backup-name>
-
-# Get restore logs
-velero restore logs <restore-name>
-
-# View volume snapshots
-velero snapshot-location get
-
-#############################################
-
-
-
-
-
-
+  
 
 

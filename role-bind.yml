@@ -10,4 +10,4 @@ roleRef:
 subjects:
 - namespace: velero
   kind: ServiceAccount
-  name: jenkins-sa
+  name: jenkins

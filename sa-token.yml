@@ -4,4 +4,5 @@ type: kubernetes.io/service-account-token
 metadata:
   name: eks-token
   annotations:
-    kubernetes.io/service-account.name: jenkins-sa
+    kubernetes.io/service-account.name: jenkins
+  namespace: velero

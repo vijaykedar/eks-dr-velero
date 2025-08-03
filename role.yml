@@ -12,6 +12,7 @@ rules:
         - extensions
         - policy
         - rbac.authorization.k8s.io
+        - velero.io
     resources:
       - pods
       - secrets
@@ -35,4 +36,5 @@ rules:
       - replicationcontrollers
       - serviceaccounts
       - services
+      - backups
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

@@ -1,97 +1,53 @@
-Setup Daily backup for EKS Disaster Recovery - Velero
-- Keep plan ready for EKS DR cluster in another region.
-- Take daily backup of EKS cluster using velero.
-- Setup the backup storage i.e S3 bucket and enable Cross-Region-Replication for disaster recovery.
+pipeline {
+    agent any
 
-Velero Setup - 
+    triggers {
+        // Run daily at 2:00 AM
+        cron('0 2 * * *')
+    }
 
-1. Install Velero on Client/Local Machine
-   $ wget https://github.com/vmware-tanzu/velero/releases/download/v1.16.0/velero-v1.16.0-linux-amd64.tar.gz
-   $ tar zxvf velero-v1.16.0-linux-amd64.tar.gz
-   $ sudo mv velero-v1.16.0-linux-amd64/velero /usr/local/bin/velero
+    environment {
+        BACKUP_NAME = "jenkins-backup-${new Date().format('yyyyMMdd-HHmm')}"
+ //      NAMESPACE = "your-target-namespace"  // Optional: limit the backup
+    }
 
-2. Install Velero on EKS Cluster
-   $  velero install \
-      --provider aws \
-      --plugins velero/velero-plugin-for-aws:v1.10.0 \
-      --bucket wezvatech-eks-backup \
-      --secret-file /home/ubuntu/.aws/credentials \
-      --backup-location-config region=ap-south-1 \
-      --snapshot-location-config region=ap-south-1
-   
-   Verify velero agent is running 
-    $ kubectl get pods -n velero
+    stages {
+        stage('Velero Backup') {
+            steps {
 
-   
-3. Setup jenkins job for daily backup  
+               withKubeConfig(caCertificate: '', clusterName: 'EKS-Demo', contextName: '', credentialsId: 'eks-token', namespace: '', restrictKubeConfigAccess: false, serverUrl: 'https://9AC0B452E60113A6CB7C022E2BDA37D2.gr7.ap-south-1.eks.amazonaws.com') {
+    // some block
+               
+                    sh '''
+                    echo "Starting Velero backup: $BACKUP_NAME"
 
-- Create Service Account for jenkins in EKS Cluster
-   $ kubectl apply -f sa.yml
+                    velero create backup $BACKUP_NAME \
+                      --wait
 
-- Create Role and Role-binding for service account
-   $ kubectl apply -f role.yml role-bind.yml
+                    echo "Backup $BACKUP_NAME complete."
+                    '''
+                }
+            }
+        }
+    }
 
-- Create Service Account Token 
-   $ kubectl apply -f sa-token.yml
-
-- Describe service account token secret and setup in jenkins credentials
-   $ kubectl describe secret eks-token -n velero
-
-4. Develop Jenkinsfile and include backup script and trigger daily
-
-
-Velero Commands- 
-
-##################################### Backup #########################################
-# Create a backup of all namespaces
-velero backup create <backup-name> --ttl 72h0m0s
-
-# Backup a specific namespace
-velero backup create <backup-name> --include-namespaces <namespace>
-
-# Backup specific resources
-velero backup create <backup-name> --include-resources deployments,services
-
-# Backup with a label selector
-velero backup create <backup-name> --selector app=myapp
-
-# Describe a backup
-velero backup describe <backup-name> --details
-
-# Get all backups
-velero backup get
-
-# Delete a backup
-velero backup delete <backup-name>  
+post {
+        success {
+            echo "✅ Velero backup completed successfully: $BACKUP_NAME"
+            // Optional: send notification
+            // slackSend color: 'good', message: "Backup successful: $BACKUP_NAME"
+        }
+        failure {
+            echo "❌ Velero backup failed: $BACKUP_NAME"
+            // Optional: send alert
+            // slackSend color: 'danger', message: "Backup failed: $BACKUP_NAME"
+        }
+        always {
+            echo "📦 Velero backup job finished at: ${new Date()}"
+            // Optional: archive logs
+            // archiveArtifacts artifacts: 'backup-log.txt', onlyIfSuccessful: false
+        }
+    }
 
 
-##############################  Restores ######################################
-
-# Restore from a backup
-velero restore create --from-backup <backup-name>
-
-# Restore to a different namespace
-velero restore create --from-backup <backup-name> \
-  --namespace-mappings old-namespace:new-namespace
-
-# Get all restores
-velero restore get
-
-# Describe a restore
-velero restore describe <restore-name> --details
-
-# Delete a restore
-velero restore delete <restore-name>
-
-########################## Snapshots & Logs #######################################
-
-# Get backup logs
-velero backup logs <backup-name>
-
-# Get restore logs
-velero restore logs <restore-name>
-
-# View volume snapshots
-velero snapshot-location get
-
-#############################################
+}

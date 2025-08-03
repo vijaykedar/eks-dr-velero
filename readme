@@ -1,48 +1,96 @@
-Setup Daily backup for EKS Disaster Recovery - Velero
-- Keep plan ready for EKS DR cluster in another region.
-- Take daily backup of EKS cluster using velero.
-- Setup the backup storage i.e S3 bucket and enable Cross-Region-Replication for disaster recovery.
+---
 
-Velero Setup - 
+````markdown
+# 📦 Setup Daily Backup for EKS Disaster Recovery - Velero
 
-1. Install Velero on Client/Local Machine
-   $ wget https://github.com/vmware-tanzu/velero/releases/download/v1.16.0/velero-v1.16.0-linux-amd64.tar.gz
-   $ tar zxvf velero-v1.16.0-linux-amd64.tar.gz
-   $ sudo mv velero-v1.16.0-linux-amd64/velero /usr/local/bin/velero
+---
 
-2. Install Velero on EKS Cluster
-   $  velero install \
-      --provider aws \
-      --plugins velero/velero-plugin-for-aws:v1.10.0 \
-      --bucket wezvatech-eks-backup \
-      --secret-file /home/ubuntu/.aws/credentials \
-      --backup-location-config region=ap-south-1 \
-      --snapshot-location-config region=ap-south-1
-   
-   Verify velero agent is running 
-    $ kubectl get pods -n velero
+## 📋 Plan
 
-   
-3. Setup jenkins job for daily backup  
+- ✅ Keep plan ready for EKS DR cluster in another region  
+- ✅ Take daily backup of EKS cluster using Velero  
+- ✅ Setup the backup storage (S3 bucket) and enable **Cross-Region Replication** for disaster recovery  
 
-- Create Service Account for jenkins in EKS Cluster
-   $ kubectl apply -f sa.yml
+---
 
-- Create Role and Role-binding for service account
-   $ kubectl apply -f role.yml role-bind.yml
+## ⚙️ Velero Setup
 
-- Create Service Account Token 
-   $ kubectl apply -f sa-token.yml
+---
 
-- Describe service account token secret and setup in jenkins credentials
-   $ kubectl describe secret eks-token -n velero
+### 1. Install Velero on Client/Local Machine
 
-4. Develop Jenkinsfile and include backup script and trigger daily
+```bash
+$ wget https://github.com/vmware-tanzu/velero/releases/download/v1.16.0/velero-v1.16.0-linux-amd64.tar.gz
+$ tar zxvf velero-v1.16.0-linux-amd64.tar.gz
+$ sudo mv velero-v1.16.0-linux-amd64/velero /usr/local/bin/velero
+````
 
+---
 
-Velero Commands- 
+### 2. Install Velero on EKS Cluster
 
-##################################### Backup #########################################
+```bash
+$ velero install \
+  --provider aws \
+  --plugins velero/velero-plugin-for-aws:v1.10.0 \
+  --bucket wezvatech-eks-backup \
+  --secret-file /home/ubuntu/.aws/credentials \
+  --backup-location-config region=ap-south-1 \
+  --snapshot-location-config region=ap-south-1
+```
+
+**Verify Velero agent is running:**
+
+```bash
+$ kubectl get pods -n velero
+```
+
+---
+
+### 3. Setup Jenkins Job for Daily Backup
+
+---
+
+#### 🔹 Create Service Account for Jenkins in EKS Cluster
+
+```bash
+$ kubectl apply -f sa.yml
+```
+
+#### 🔹 Create Role and RoleBinding for Service Account
+
+```bash
+$ kubectl apply -f role.yml role-bind.yml
+```
+
+#### 🔹 Create Service Account Token
+
+```bash
+$ kubectl apply -f sa-token.yml
+```
+
+#### 🔹 Describe Service Account Token Secret and Setup in Jenkins Credentials
+
+```bash
+$ kubectl describe secret eks-token -n velero
+```
+
+---
+
+### 4. Develop Jenkinsfile for Daily Backup
+
+* Include backup script using Velero commands
+* Trigger it on a daily schedule using Jenkins
+
+---
+
+## 🔧 Velero Commands Reference
+
+---
+
+### 🔄 Backup
+
+```bash
 # Create a backup of all namespaces
 velero backup create <backup-name> --ttl 72h0m0s
 
@@ -62,11 +110,14 @@ velero backup describe <backup-name> --details
 velero backup get
 
 # Delete a backup
-velero backup delete <backup-name>  
+velero backup delete <backup-name>
+```
 
+---
 
-##############################  Restores ######################################
+### ♻️ Restore
 
+```bash
 # Restore from a backup
 velero restore create --from-backup <backup-name>
 
@@ -82,9 +133,13 @@ velero restore describe <restore-name> --details
 
 # Delete a restore
 velero restore delete <restore-name>
+```
 
-########################## Snapshots & Logs #######################################
+---
 
+### 🔍 Snapshots & Logs
+
+```bash
 # Get backup logs
 velero backup logs <backup-name>
 
@@ -93,5 +148,15 @@ velero restore logs <restore-name>
 
 # View volume snapshots
 velero snapshot-location get
+```
 
-#############################################
+---
+
+## 👨‍💻 Author
+
+**Vijay**
+
+```
+
+---
+
